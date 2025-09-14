@@ -3,6 +3,7 @@ import './App.css';
 import SuppliersPage from './SuppliersPage';
 // Recharts for pie charts on the dashboard
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
+import { gradeDistribution, complianceSplit, carbonByCategory, auditProgressSplit } from './supplierMetrics';
 
 /**
  * App implements a simple state-based authentication with a light green theme.
@@ -401,24 +402,12 @@ function Badge({ grade }) {
 }
 
 function DashboardHome({ role, user }) {
-  const supplierView = (
-    <section className="panel">
-      <h2 className="panel-title">Welcome, {user}</h2>
-      <p className="panel-text">This is your SustainHub home. Use quick actions to get started.</p>
-      <div className="cards" style={{ fontSize: '0.8em' }}>
-        <StatTile label="% Data Complete" value="72%" accent="#3BB273" />
-        <StatTile label="Last Updated" value="2024-12-18" accent="#83dba0" />
-        <StatTile label="My Grade" value={<Badge grade="B" />} accent="#F9A825" />
-      </div>
-    </section>
-  );
-
   // Local re-usable pie chart card
-  const PieCard = ({ title, data, colors, innerRadius = 40, outerRadius = 70 }) => {
+  const PieCard = ({ title, data, colors, innerRadius = 40, outerRadius = 70, subtitle }) => {
     return (
       <div className="mini-card pie-card">
         <div className="mini-card-title">{title}</div>
-        <div className="mini-card-text">Mock data</div>
+        {subtitle && <div className="mini-card-text">{subtitle}</div>}
         <div className="pie-wrap">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
@@ -445,106 +434,171 @@ function DashboardHome({ role, user }) {
     );
   };
 
-  // Sample mock datasets for the four KPIs
-  const chartsData = {
-    supplierGrades: [
-      { name: 'Grade A', value: 24 },
-      { name: 'Grade B', value: 40 },
-      { name: 'Grade C', value: 22 },
-      { name: 'Grade D', value: 14 },
-    ],
-    compliance: [
-      { name: 'Compliant', value: 64 },
-      { name: 'Non-compliant', value: 36 },
-    ],
-    carbonByCategory: [
-      { name: 'Raw Materials', value: 38 },
-      { name: 'Manufacturing', value: 27 },
-      { name: 'Logistics', value: 18 },
-      { name: 'Packaging', value: 9 },
-      { name: 'Other', value: 8 },
-    ],
-    auditProgress: [
-      { name: 'Not Started', value: 18 },
-      { name: 'In Progress', value: 32 },
-      { name: 'Completed', value: 44 },
-      { name: 'Failed', value: 6 },
-    ],
-  };
+  // Build the same supplier dataset used by SuppliersPage to keep one source of truth
+  const suppliersData = React.useMemo(() => {
+    // Inline replica of SuppliersPage's deterministic generator for shared read-only use on dashboard.
+    const countries = ['USA', 'Germany', 'India', 'Brazil', 'Netherlands', 'Japan', 'China', 'France', 'UK', 'Canada', 'Spain', 'Italy', 'Mexico', 'Sweden', 'Norway'];
+    const industries = ['AgriTech', 'Battery', 'Renewables', 'Automotive', 'Packaging', 'Healthcare', 'Robotics', 'Electronics', 'Pharma'];
+    const sbtiStates = ['None', 'Committed', 'Approved'];
+    const grades = ['A', 'B', 'C', 'D'];
+    const baseNames = ['Agrisoft', 'BareTech', 'BrightSolar', 'EcoFusion', 'PackRight', 'MediCore', 'RoboAxis', 'EcoPrint', 'GreenCore', 'SunVolt', 'AquaFlux', 'TerraPack', 'VoltEdge', 'NeuroBot', 'BioHealth'];
+
+    const explicitD = [
+      { supplier: 'DeltaPack 0001D', country: 'USA', industry: 'Packaging', renewables: 9, sbti: 'None', products: 2, grade: 'D', lastUpdated: '2023-06-12' },
+      { supplier: 'LowCarbon Inc 0002D', country: 'India', industry: 'Automotive', renewables: 12, sbti: 'None', products: 1, grade: 'D', lastUpdated: '2024-01-24' },
+      { supplier: 'OldData Co 0003D', country: 'Germany', industry: 'Electronics', renewables: 7, sbti: 'Committed', products: 3, grade: 'D', lastUpdated: '2023-03-05' },
+      { supplier: 'NonReporting LLC 0004D', country: 'Brazil', industry: 'AgriTech', renewables: 6, sbti: 'None', products: 1, grade: 'D', lastUpdated: '2023-02-14' },
+    ];
+
+    const TOTAL = 1000;
+    const list = [];
+    for (let i = 1; i <= TOTAL; i++) {
+      const name = `${baseNames[i % baseNames.length]} ${i.toString().padStart(4, '0')}`;
+      const country = countries[i % countries.length];
+      const industry = industries[i % industries.length];
+      const renewables = 5 + ((i * 11) % 92); // 5..96
+      const sbti = sbtiStates[i % sbtiStates.length];
+      const products = 1 + (i % 12);
+      const grade = grades[i % grades.length];
+      const month = String((i % 12) + 1).padStart(2, '0');
+      const day = String(((i * 3) % 28) + 1).padStart(2, '0');
+      const year = 2023 + ((i % 20) > 10 ? 1 : 0);
+      const lastUpdated = `${year}-${month}-${day}`;
+      list.push({ supplier: name, country, industry, renewables, sbti, products, grade, lastUpdated });
+    }
+
+    const seed = [
+      { supplier: 'Agrisoft', country: 'Brazil', industry: 'AgriTech', renewables: 45, sbti: 'None', products: 3, grade: 'B', lastUpdated: '2023-09-02' },
+      { supplier: 'BareTech', country: 'India', industry: 'Battery', renewables: 52, sbti: 'Committed', products: 5, grade: 'A', lastUpdated: '2024-01-12' },
+      { supplier: 'BrightSolar', country: 'USA', industry: 'Renewables', renewables: 70, sbti: 'Approved', products: 2, grade: 'A', lastUpdated: '2024-05-19' },
+      { supplier: 'EcoFusion', country: 'Germany', industry: 'Automotive', renewables: 30, sbti: 'Committed', products: 1, grade: 'B', lastUpdated: '2023-11-30' },
+      { supplier: 'PackRight', country: 'Netherlands', industry: 'Packaging', renewables: 67, sbti: 'Approved', products: 4, grade: 'A', lastUpdated: '2024-02-18' },
+      { supplier: 'MediCore', country: 'Japan', industry: 'Healthcare', renewables: 15, sbti: 'None', products: 3, grade: 'C', lastUpdated: '2023-08-09' },
+      { supplier: 'RoboAxis', country: 'China', industry: 'Robotics', renewables: 10, sbti: 'None', products: 6, grade: 'C', lastUpdated: '2023-07-21' },
+      { supplier: 'EcoPrint', country: 'France', industry: 'Packaging', renewables: 30, sbti: 'Committed', products: 2, grade: 'B', lastUpdated: '2023-12-05' },
+    ];
+
+    return [...seed, ...explicitD, ...list];
+  }, []);
+
+  // For a simple filter parity with Suppliers page, add optional local filter states (could be extended later)
+  const [query, setQuery] = useState('');
+  const [gradeFilter, setGradeFilter] = useState('All grades');
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return suppliersData.filter((r) => {
+      const hay = `${r.supplier} ${r.country} ${r.industry}`.toLowerCase();
+      const matchesText = q.length === 0 || hay.includes(q);
+      const matchesGrade = gradeFilter === 'All grades' ? true : r.grade === gradeFilter.replace('Grade ', '');
+      return matchesText && matchesGrade;
+    });
+  }, [suppliersData, query, gradeFilter]);
+
+  // Compute dashboard metrics from the current dataset (filtered to mirror Suppliers behavior)
+  const dist = useMemo(() => gradeDistribution(filtered), [filtered]);
+  const compliance = useMemo(() => complianceSplit(filtered), [filtered]);
+  const carbon = useMemo(() => carbonByCategory(filtered), [filtered]);
+  const audit = useMemo(() => auditProgressSplit(filtered), [filtered]);
 
   // Green-tinted palette aligned with theme
   const pal = {
+    grades: ['#2f9954', '#83dba0', '#a8e6bc', '#c7efd3'],
+    status: ['#3fbf6a', '#e57373'],
     strong: ['#2f9954', '#83dba0', '#a8e6bc', '#c7efd3', '#e3f7e9'],
-    status: ['#3fbf6a', '#e57373', '#83dba0', '#ffd166'], // for compliant/non, etc.
+    audit: ['#c7efd3', '#a8e6bc', '#3fbf6a', '#ffd1d1'],
   };
+
+  const supplierView = (
+    <section className="panel">
+      <h2 className="panel-title">Welcome, {user}</h2>
+      <p className="panel-text">This is your SustainHub home. Use quick actions to get started.</p>
+      <div className="cards" style={{ fontSize: '0.8em' }}>
+        <StatTile label="% Data Complete" value="72%" accent="#3BB273" />
+        <StatTile label="Last Updated" value="2024-12-18" accent="#83dba0" />
+        <StatTile label="My Grade" value={<Badge grade="B" />} accent="#F9A825" />
+      </div>
+    </section>
+  );
 
   const adminView = (
     <section className="panel">
       <h2 className="panel-title">Enterprise Dashboard</h2>
       <p className="panel-text">Overview of supplier compliance and sustainability performance.</p>
+
+      {/* Quick filter (mirrors Suppliers filters lightly so dashboard can reflect subset) */}
+      <div className="mini-card" style={{ marginBottom: 12, padding: 12, display: 'grid', gap: 8, fontSize: '0.8em' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 180px', gap: 8 }}>
+          <input
+            className="input"
+            placeholder="Search suppliers, country, industry…"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            aria-label="Search suppliers on dashboard"
+            style={{ padding: '8px 10px' }}
+          />
+          <select
+            className="input"
+            value={gradeFilter}
+            onChange={(e) => setGradeFilter(e.target.value)}
+            aria-label="Filter by grade on dashboard"
+            style={{ padding: '8px 10px' }}
+          >
+            <option>All grades</option>
+            <option>Grade A</option>
+            <option>Grade B</option>
+            <option>Grade C</option>
+            <option>Grade D</option>
+          </select>
+        </div>
+      </div>
+
       <div className="cards">
-        <StatTile label="% Suppliers Compliant" value="64%" accent="#3BB273" />
-        <StatTile label="Avg Carbon Intensity" value="0.42 tCO₂e/$k" accent="#83dba0" />
-        <StatTile label="SBTi Commitments" value="38%" accent="#3fbf6a" />
+        <StatTile label="% Suppliers Compliant" value={`${compliance.compliantPct}%`} accent="#3BB273" />
+        <StatTile label="Suppliers Count" value={filtered.length} accent="#83dba0" />
+        <StatTile label="Grade A Suppliers" value={dist.A} accent="#3fbf6a" />
       </div>
 
       {/* Pie charts row */}
       <div className="charts-grid">
         <PieCard
           title="Supplier Grade Distribution"
-          data={chartsData.supplierGrades}
-          colors={['#2f9954', '#83dba0', '#a8e6bc', '#c7efd3']}
+          subtitle={`${dist.A} A | ${dist.B} B | ${dist.C} C | ${dist.D} D`}
+          data={[
+            { name: 'Grade A', value: dist.A },
+            { name: 'Grade B', value: dist.B },
+            { name: 'Grade C', value: dist.C },
+            { name: 'Grade D', value: dist.D },
+          ]}
+          colors={pal.grades}
           innerRadius={45}
           outerRadius={75}
         />
         <PieCard
           title="Compliance %"
-          data={chartsData.compliance}
-          colors={['#3fbf6a', '#e57373']}
+          subtitle={`${compliance.compliant} compliant / ${compliance.nonCompliant} non-compliant`}
+          data={[
+            { name: 'Compliant', value: compliance.compliant },
+            { name: 'Non-compliant', value: compliance.nonCompliant },
+          ]}
+          colors={pal.status}
           innerRadius={45}
           outerRadius={75}
         />
         <PieCard
           title="Carbon Emission of Items"
-          data={chartsData.carbonByCategory}
+          data={carbon}
           colors={pal.strong}
           innerRadius={45}
           outerRadius={75}
         />
         <PieCard
           title="Supplier Audit Progress"
-          data={chartsData.auditProgress}
-          colors={['#c7efd3', '#a8e6bc', '#3fbf6a', '#ffd1d1']}
+          data={audit}
+          colors={pal.audit}
           innerRadius={45}
           outerRadius={75}
         />
-      </div>
-
-      {/* Existing placeholder cards retained below for context */}
-      <div className="cards" style={{ marginTop: 14 }}>
-        <div className="mini-card" style={{ fontSize: '0.8em' }}>
-          <div className="mini-card-title">Compliance Distribution (A/B/C/D)</div>
-          <div className="mini-card-text">Donut: A 24% | B 40% | C 22% | D 14%</div>
-          <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
-            {['#388E3C', '#F9A825', '#FB8C00', '#D32F2F'].map((c, i) => (
-              <div key={c} style={{ width: 40, height: 10, background: c, borderRadius: 4 }} title={['A','B','C','D'][i]} />
-            ))}
-          </div>
-        </div>
-        <div className="mini-card">
-          <div className="mini-card-title">Emissions by Geography</div>
-          <div className="mini-card-text">Bar: NA 35 | EU 28 | APAC 22 | LATAM 15</div>
-          <div style={{ display: 'flex', gap: 6, alignItems: 'flex-end', height: 70, marginTop: 8 }}>
-            {[35,28,22,15].map((v, idx) => (
-              <div key={idx} style={{ width: 24, height: v, background: '#83dba0', borderRadius: 4 }} />
-            ))}
-          </div>
-        </div>
-        <div className="mini-card">
-          <div className="mini-card-title">Renewable Adoption Trend</div>
-          <div className="mini-card-text">Line: 18% → 26% → 33% → 41%</div>
-          <div style={{ height: 70, background: 'linear-gradient(180deg, rgba(63,191,106,0.25), transparent)', borderRadius: 8, marginTop: 8 }} />
-        </div>
       </div>
     </section>
   );
