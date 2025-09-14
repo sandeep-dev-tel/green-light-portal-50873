@@ -87,7 +87,7 @@ export default function App() {
 function AuthLayout({ children }) {
   return (
     <div className="auth-layout">
-      <div className="brand-badge">Green Light Portal</div>
+      <div className="brand-badge">SustainX Portal</div>
       {children}
       <footer className="footer-note">Demo login: admin / secret@111</footer>
     </div>
