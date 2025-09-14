@@ -1,5 +1,5 @@
 :root {
-  color-scheme: light;
+  /* color-scheme is set per theme in App.css (theme-light/theme-dark/theme-day) */
 }
 
 * { box-sizing: border-box; }

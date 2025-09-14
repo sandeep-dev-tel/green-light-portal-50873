@@ -351,7 +351,7 @@ function SuppliersStyles() {
       display: grid;
       grid-template-columns: 28px 1fr;
       align-items: center;
-      background: #fff;
+      background: var(--bg-surface);
       border: 1px solid var(--border-subtle);
       border-radius: 10px;
       padding: 8px 10px;
@@ -367,7 +367,8 @@ function SuppliersStyles() {
       color: var(--text-primary);
     }
     .sp-input-inline {
-      background: #fff;
+      background: var(--bg-surface);
+      color: var(--text-primary);
     }
     .sp-filter-row {
       display: flex;
@@ -417,7 +418,7 @@ function SuppliersStyles() {
       white-space: nowrap;
     }
     tbody tr:nth-child(odd) td {
-      background: #FAFAFB;
+      background: color-mix(in oklab, var(--bg-surface) 92%, transparent);
     }
     .sp-th-btn {
       background: transparent;

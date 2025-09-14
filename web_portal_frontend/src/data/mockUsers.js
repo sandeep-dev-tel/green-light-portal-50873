@@ -8,7 +8,7 @@
 
 export const mockAdminUser = {
   username: 'admin',
-  password: 'secret@111',
+  password: 'secret@123',
 };
 
 // PUBLIC_INTERFACE

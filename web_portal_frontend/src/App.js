@@ -6,6 +6,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recha
 import { gradeDistribution, complianceSplit, carbonByCategory, auditProgressSplit } from './supplierMetrics';
 import { mockSuppliers } from './data/mockSuppliers';
 import { mockAdminUser, isValidMockCredential } from './data/mockUsers';
+import { useTheme } from './theme';
 
 /**
  * App implements a simple state-based authentication with a light green theme.
@@ -220,6 +221,7 @@ function SustainHubLayout({
   onLogout,
   children,
 }) {
+  const { theme, setTheme } = useTheme();
   const sectionsBase = [
     { key: 'Dashboard', label: 'Dashboard' },
     { key: 'My Profile', label: 'My Profile' },
@@ -282,6 +284,17 @@ function SustainHubLayout({
             <option>EN</option>
             <option>DE</option>
             <option>ES</option>
+          </select>
+          <select
+            aria-label="Theme"
+            className="input"
+            value={theme}
+            onChange={(e) => setTheme(e.target.value)}
+            style={{ width: 120, padding: '8px 10px' }}
+          >
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+            <option value="day">Day</option>
           </select>
         </div>
         <div className="user-area">
