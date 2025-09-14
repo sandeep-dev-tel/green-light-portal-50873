@@ -210,7 +210,10 @@ function SustainHubLayout({
     <div className="dashboard">
       <header className="topbar">
         <div className="brand">Elxsi SustainHub</div>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <div
+          /* Reduce font sizing for topbar controls by 20% (login page unaffected) */
+          style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: '0.8em' }}
+        >
           <select
             aria-label="Role"
             className="input"
@@ -245,7 +248,7 @@ function SustainHubLayout({
         <aside style={{ padding: 16 }}>
           <nav className="panel" aria-label="Sidebar Navigation">
             <div className="mini-card-title" style={{ marginBottom: 8 }}>Navigation</div>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 6 }}>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 6, fontSize: '0.8em' }}>
               {sections.map((s) => (
                 <li key={s.key}>
                   <button
@@ -260,7 +263,7 @@ function SustainHubLayout({
             </ul>
           </nav>
 
-          <div className="panel" style={{ marginTop: 12 }}>
+          <div className="panel" style={{ marginTop: 12, fontSize: '0.8em' }}>
             <div className="mini-card-title">Quick Actions</div>
             <div style={{ display: 'grid', gap: 8, marginTop: 8 }}>
               <button className="btn btn-primary" onClick={() => onSelectSection('Data Submission')}>
@@ -279,7 +282,7 @@ function SustainHubLayout({
         <main className="content">{children}</main>
       </div>
 
-      <footer className="footer-note" style={{ position: 'static', padding: 16 }}>
+      <footer className="footer-note" style={{ position: 'static', padding: 16, fontSize: '0.8em' }}>
         Help &amp; Support | Privacy Policy | Tata Elxsi
       </footer>
     </div>
@@ -322,7 +325,12 @@ function StatTile({ label, value, accent = 'var(--primary)' }) {
   return (
     <div className="mini-card" style={{ borderLeft: `4px solid ${accent}` }}>
       <div className="mini-card-title">{label}</div>
-      <div style={{ fontSize: 22, fontWeight: 800 }}>{value}</div>
+      <div
+        /* Reduced by 20% to align with global scaling on authenticated pages */
+        style={{ fontSize: '17.6px', fontWeight: 800 }}
+      >
+        {value}
+      </div>
     </div>
   );
 }
@@ -338,7 +346,9 @@ function Badge({ grade }) {
       color: '#fff',
       background: color,
       minWidth: 28,
-      textAlign: 'center'
+      textAlign: 'center',
+      /* Reduce badge text by ~20% on non-login pages */
+      fontSize: '0.8em'
     }}>{grade}</span>
   );
 }
@@ -348,7 +358,7 @@ function DashboardHome({ role, user }) {
     <section className="panel">
       <h2 className="panel-title">Welcome, {user}</h2>
       <p className="panel-text">This is your SustainHub home. Use quick actions to get started.</p>
-      <div className="cards">
+      <div className="cards" style={{ fontSize: '0.8em' }}>
         <StatTile label="% Data Complete" value="72%" accent="#3BB273" />
         <StatTile label="Last Updated" value="2024-12-18" accent="#83dba0" />
         <StatTile label="My Grade" value={<Badge grade="B" />} accent="#F9A825" />
@@ -367,7 +377,7 @@ function DashboardHome({ role, user }) {
       </div>
 
       <div className="cards" style={{ marginTop: 14 }}>
-        <div className="mini-card">
+        <div className="mini-card" style={{ fontSize: '0.8em' }}>
           <div className="mini-card-title">Compliance Distribution (A/B/C/D)</div>
           <div className="mini-card-text">Donut: A 24% | B 40% | C 22% | D 14%</div>
           <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
@@ -426,7 +436,7 @@ function DataSubmission() {
       <h2 className="panel-title">Data Submission</h2>
       <p className="panel-text">Submit emissions and compliance data via guided form or CSV upload.</p>
 
-      <div className="mini-card" style={{ marginBottom: 12 }}>
+      <div className="mini-card" style={{ marginBottom: 12, fontSize: '0.8em' }}>
         <div className="mini-card-title">Option 1: Guided Form</div>
         <div className="mini-card-text">Scope 1, 2, 3, Renewables %, Certifications</div>
         <div style={{ display: 'grid', gap: 8, marginTop: 8 }}>
@@ -476,7 +486,7 @@ function ComplianceScores() {
         <Badge grade="B" />
       </div>
 
-      <div className="cards" style={{ marginTop: 12 }}>
+      <div className="cards" style={{ marginTop: 12, fontSize: '0.8em' }}>
         <div className="mini-card">
           <div className="mini-card-title">Gaps Highlight</div>
           <ul className="mini-card-text">
@@ -511,7 +521,7 @@ function KnowledgeHub() {
   return (
     <section className="panel">
       <h2 className="panel-title">Knowledge Hub</h2>
-      <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 10, fontSize: '0.8em' }}>
         <input className="input" placeholder="Search resources..." />
         <button className="btn btn-ghost">Filter</button>
       </div>
@@ -544,7 +554,7 @@ function ReportsDownloads() {
           <input className="input" placeholder="Year" />
         </div>
       </div>
-      <div style={{ display: 'flex', gap: 8 }}>
+      <div style={{ display: 'flex', gap: 8, fontSize: '0.8em' }}>
         <button className="btn btn-primary">Export CSV</button>
         <button className="btn btn-ghost">Export PDF</button>
       </div>

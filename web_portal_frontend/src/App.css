@@ -20,6 +20,10 @@
   --primary-strong: var(--green-700);
   --primary-soft: var(--green-100);
   --shadow: 0 10px 20px rgba(59, 131, 91, 0.12);
+
+  /* Typography scale: apply 0.8x reduction across non-login UI.
+     We will apply this scale selectively (exclude .auth-layout subtree). */
+  --font-scale: 0.8;
 }
 
 * { box-sizing: border-box; }
@@ -33,7 +37,7 @@ html, body, #root, .glp-app {
 
 a { color: var(--primary); }
 
-/* Auth layout */
+/* Auth layout (login screen) - DO NOT scale fonts here */
 .auth-layout {
   min-height: 100%;
   display: grid;
@@ -45,6 +49,7 @@ a { color: var(--primary); }
   position: relative;
 }
 
+/* Keep login badge text as-is (no scaling) */
 .brand-badge {
   position: absolute;
   top: 24px;
@@ -59,6 +64,7 @@ a { color: var(--primary); }
   box-shadow: var(--shadow);
 }
 
+/* Keep login footer note size as-is */
 .footer-note {
   position: absolute;
   bottom: 20px;
@@ -77,6 +83,7 @@ a { color: var(--primary); }
   padding: 28px;
 }
 
+/* Login page typography (unchanged) */
 .login-card .title {
   margin: 0 0 6px;
   font-size: 28px;
@@ -90,6 +97,7 @@ a { color: var(--primary); }
 
 /* Form */
 .form { display: flex; flex-direction: column; gap: 12px; }
+/* Login page label size unchanged */
 .label {
   font-size: 13px;
   color: var(--muted);
@@ -149,11 +157,13 @@ a { color: var(--primary); }
 .btn-full { width: 100%; }
 .small { padding: 8px 10px; font-size: 13px; }
 
-/* Dashboard */
+/* Dashboard (post-login) */
+/* Apply 0.8x scaling to all text within the authenticated shell only. */
 .dashboard {
   min-height: 100%;
   display: grid;
   grid-template-rows: auto 1fr;
+  font-size: calc(1rem * var(--font-scale));
 }
 
 .topbar {
@@ -169,11 +179,12 @@ a { color: var(--primary); }
   top: 0;
   z-index: 10;
 }
-
-.brand {
+.topbar .brand {
   font-weight: 800;
   color: var(--primary-strong);
   letter-spacing: 0.2px;
+  /* scale brand text */
+  font-size: calc(1.25rem * var(--font-scale));
 }
 
 .menu {
@@ -192,6 +203,8 @@ a { color: var(--primary); }
   color: var(--muted);
   font-weight: 600;
   cursor: pointer;
+  /* reduce menu item font size */
+  font-size: calc(1rem * var(--font-scale));
 }
 .menu-item:hover { color: var(--primary-strong); background: var(--green-100); }
 .menu-item.active {
@@ -206,10 +219,12 @@ a { color: var(--primary); }
   gap: 10px;
   align-items: center;
 }
-.greeting { color: var(--muted); font-size: 14px; }
+.greeting { color: var(--muted); font-size: calc(14px * var(--font-scale)); }
 
 .content {
   padding: 24px;
+  /* default base font size reduced for content */
+  font-size: calc(1rem * var(--font-scale));
 }
 
 .panel {
@@ -222,10 +237,13 @@ a { color: var(--primary); }
 .panel-title {
   margin: 0 0 6px;
   color: var(--primary-strong);
+  /* scale typical h2 size down by 20% */
+  font-size: calc(1.5rem * var(--font-scale));
 }
 .panel-text {
   margin: 0 0 18px;
   color: var(--muted);
+  font-size: calc(1rem * var(--font-scale));
 }
 
 /* cards and layout */
@@ -244,10 +262,11 @@ a { color: var(--primary); }
   font-weight: 700;
   color: var(--text);
   margin-bottom: 6px;
+  font-size: calc(1rem * var(--font-scale));
 }
 .mini-card-text {
   color: var(--muted);
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
 }
 
 /* Responsive */
