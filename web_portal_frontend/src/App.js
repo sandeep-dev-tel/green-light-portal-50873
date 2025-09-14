@@ -4,6 +4,7 @@ import SuppliersPage from './SuppliersPage';
 // Recharts for pie charts on the dashboard
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { gradeDistribution, complianceSplit, carbonByCategory, auditProgressSplit } from './supplierMetrics';
+import { mockSuppliers } from './data/mockSuppliers';
 
 /**
  * App implements a simple state-based authentication with a light green theme.
@@ -434,52 +435,8 @@ function DashboardHome({ role, user }) {
     );
   };
 
-  // Build the same supplier dataset used by SuppliersPage to keep one source of truth
-  const suppliersData = React.useMemo(() => {
-    // Inline replica of SuppliersPage's deterministic generator for shared read-only use on dashboard.
-    const countries = ['USA', 'Germany', 'India', 'Brazil', 'Netherlands', 'Japan', 'China', 'France', 'UK', 'Canada', 'Spain', 'Italy', 'Mexico', 'Sweden', 'Norway'];
-    const industries = ['AgriTech', 'Battery', 'Renewables', 'Automotive', 'Packaging', 'Healthcare', 'Robotics', 'Electronics', 'Pharma'];
-    const sbtiStates = ['None', 'Committed', 'Approved'];
-    const grades = ['A', 'B', 'C', 'D'];
-    const baseNames = ['Agrisoft', 'BareTech', 'BrightSolar', 'EcoFusion', 'PackRight', 'MediCore', 'RoboAxis', 'EcoPrint', 'GreenCore', 'SunVolt', 'AquaFlux', 'TerraPack', 'VoltEdge', 'NeuroBot', 'BioHealth'];
-
-    const explicitD = [
-      { supplier: 'DeltaPack 0001D', country: 'USA', industry: 'Packaging', renewables: 9, sbti: 'None', products: 2, grade: 'D', lastUpdated: '2023-06-12' },
-      { supplier: 'LowCarbon Inc 0002D', country: 'India', industry: 'Automotive', renewables: 12, sbti: 'None', products: 1, grade: 'D', lastUpdated: '2024-01-24' },
-      { supplier: 'OldData Co 0003D', country: 'Germany', industry: 'Electronics', renewables: 7, sbti: 'Committed', products: 3, grade: 'D', lastUpdated: '2023-03-05' },
-      { supplier: 'NonReporting LLC 0004D', country: 'Brazil', industry: 'AgriTech', renewables: 6, sbti: 'None', products: 1, grade: 'D', lastUpdated: '2023-02-14' },
-    ];
-
-    const TOTAL = 1000;
-    const list = [];
-    for (let i = 1; i <= TOTAL; i++) {
-      const name = `${baseNames[i % baseNames.length]} ${i.toString().padStart(4, '0')}`;
-      const country = countries[i % countries.length];
-      const industry = industries[i % industries.length];
-      const renewables = 5 + ((i * 11) % 92); // 5..96
-      const sbti = sbtiStates[i % sbtiStates.length];
-      const products = 1 + (i % 12);
-      const grade = grades[i % grades.length];
-      const month = String((i % 12) + 1).padStart(2, '0');
-      const day = String(((i * 3) % 28) + 1).padStart(2, '0');
-      const year = 2023 + ((i % 20) > 10 ? 1 : 0);
-      const lastUpdated = `${year}-${month}-${day}`;
-      list.push({ supplier: name, country, industry, renewables, sbti, products, grade, lastUpdated });
-    }
-
-    const seed = [
-      { supplier: 'Agrisoft', country: 'Brazil', industry: 'AgriTech', renewables: 45, sbti: 'None', products: 3, grade: 'B', lastUpdated: '2023-09-02' },
-      { supplier: 'BareTech', country: 'India', industry: 'Battery', renewables: 52, sbti: 'Committed', products: 5, grade: 'A', lastUpdated: '2024-01-12' },
-      { supplier: 'BrightSolar', country: 'USA', industry: 'Renewables', renewables: 70, sbti: 'Approved', products: 2, grade: 'A', lastUpdated: '2024-05-19' },
-      { supplier: 'EcoFusion', country: 'Germany', industry: 'Automotive', renewables: 30, sbti: 'Committed', products: 1, grade: 'B', lastUpdated: '2023-11-30' },
-      { supplier: 'PackRight', country: 'Netherlands', industry: 'Packaging', renewables: 67, sbti: 'Approved', products: 4, grade: 'A', lastUpdated: '2024-02-18' },
-      { supplier: 'MediCore', country: 'Japan', industry: 'Healthcare', renewables: 15, sbti: 'None', products: 3, grade: 'C', lastUpdated: '2023-08-09' },
-      { supplier: 'RoboAxis', country: 'China', industry: 'Robotics', renewables: 10, sbti: 'None', products: 6, grade: 'C', lastUpdated: '2023-07-21' },
-      { supplier: 'EcoPrint', country: 'France', industry: 'Packaging', renewables: 30, sbti: 'Committed', products: 2, grade: 'B', lastUpdated: '2023-12-05' },
-    ];
-
-    return [...seed, ...explicitD, ...list];
-  }, []);
+  // Centralized suppliers dataset from a single source of truth
+  const suppliersData = React.useMemo(() => mockSuppliers, []);
 
   // For a simple filter parity with Suppliers page, add optional local filter states (could be extended later)
   const [query, setQuery] = useState('');
