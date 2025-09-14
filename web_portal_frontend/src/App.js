@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import './App.css';
 import SuppliersPage from './SuppliersPage';
+// Recharts for pie charts on the dashboard
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 
 /**
  * App implements a simple state-based authentication with a light green theme.
@@ -411,6 +413,71 @@ function DashboardHome({ role, user }) {
     </section>
   );
 
+  // Local re-usable pie chart card
+  const PieCard = ({ title, data, colors, innerRadius = 40, outerRadius = 70 }) => {
+    return (
+      <div className="mini-card pie-card">
+        <div className="mini-card-title">{title}</div>
+        <div className="mini-card-text">Mock data</div>
+        <div className="pie-wrap">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={data}
+                dataKey="value"
+                nameKey="name"
+                cx="50%"
+                cy="50%"
+                innerRadius={innerRadius}
+                outerRadius={outerRadius}
+                paddingAngle={2}
+              >
+                {data.map((entry, idx) => (
+                  <Cell key={`slice-${title}-${idx}`} fill={colors[idx % colors.length]} />
+                ))}
+              </Pie>
+              <Tooltip />
+              <Legend verticalAlign="bottom" height={24} />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+    );
+  };
+
+  // Sample mock datasets for the four KPIs
+  const chartsData = {
+    supplierGrades: [
+      { name: 'Grade A', value: 24 },
+      { name: 'Grade B', value: 40 },
+      { name: 'Grade C', value: 22 },
+      { name: 'Grade D', value: 14 },
+    ],
+    compliance: [
+      { name: 'Compliant', value: 64 },
+      { name: 'Non-compliant', value: 36 },
+    ],
+    carbonByCategory: [
+      { name: 'Raw Materials', value: 38 },
+      { name: 'Manufacturing', value: 27 },
+      { name: 'Logistics', value: 18 },
+      { name: 'Packaging', value: 9 },
+      { name: 'Other', value: 8 },
+    ],
+    auditProgress: [
+      { name: 'Not Started', value: 18 },
+      { name: 'In Progress', value: 32 },
+      { name: 'Completed', value: 44 },
+      { name: 'Failed', value: 6 },
+    ],
+  };
+
+  // Green-tinted palette aligned with theme
+  const pal = {
+    strong: ['#2f9954', '#83dba0', '#a8e6bc', '#c7efd3', '#e3f7e9'],
+    status: ['#3fbf6a', '#e57373', '#83dba0', '#ffd166'], // for compliant/non, etc.
+  };
+
   const adminView = (
     <section className="panel">
       <h2 className="panel-title">Enterprise Dashboard</h2>
@@ -421,6 +488,39 @@ function DashboardHome({ role, user }) {
         <StatTile label="SBTi Commitments" value="38%" accent="#3fbf6a" />
       </div>
 
+      {/* Pie charts row */}
+      <div className="charts-grid">
+        <PieCard
+          title="Supplier Grade Distribution"
+          data={chartsData.supplierGrades}
+          colors={['#2f9954', '#83dba0', '#a8e6bc', '#c7efd3']}
+          innerRadius={45}
+          outerRadius={75}
+        />
+        <PieCard
+          title="Compliance %"
+          data={chartsData.compliance}
+          colors={['#3fbf6a', '#e57373']}
+          innerRadius={45}
+          outerRadius={75}
+        />
+        <PieCard
+          title="Carbon Emission of Items"
+          data={chartsData.carbonByCategory}
+          colors={pal.strong}
+          innerRadius={45}
+          outerRadius={75}
+        />
+        <PieCard
+          title="Supplier Audit Progress"
+          data={chartsData.auditProgress}
+          colors={['#c7efd3', '#a8e6bc', '#3fbf6a', '#ffd1d1']}
+          innerRadius={45}
+          outerRadius={75}
+        />
+      </div>
+
+      {/* Existing placeholder cards retained below for context */}
       <div className="cards" style={{ marginTop: 14 }}>
         <div className="mini-card" style={{ fontSize: '0.8em' }}>
           <div className="mini-card-title">Compliance Distribution (A/B/C/D)</div>
