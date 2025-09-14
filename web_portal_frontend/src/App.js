@@ -219,16 +219,25 @@ function SustainHubLayout({
     { key: 'My Profile', label: 'My Profile' },
     { key: 'Data Submission', label: 'Data Submission' },
     { key: 'Compliance Scores', label: 'Compliance Scores' },
-    { key: 'Knowledge Hub', label: 'Knowledge Hub' },
     { key: 'Reports & Downloads', label: 'Reports & Downloads' },
   ];
+
+  // For Admin role, place "Suppliers" as the 2nd item and "Knowledge Hub" as the last item
   const sections = role === 'Admin'
     ? [
-        ...sectionsBase,
-        { key: 'Suppliers', label: 'Suppliers' },
+        { key: 'Dashboard', label: 'Dashboard' },
+        { key: 'Suppliers', label: 'Suppliers' },           // moved to 2nd position
+        { key: 'My Profile', label: 'My Profile' },
+        { key: 'Data Submission', label: 'Data Submission' },
+        { key: 'Compliance Scores', label: 'Compliance Scores' },
+        { key: 'Reports & Downloads', label: 'Reports & Downloads' },
+        { key: 'Knowledge Hub', label: 'Knowledge Hub' },   // moved to last position
         { key: 'Admin Settings', label: 'Admin Settings' }
       ]
-    : sectionsBase;
+    : [
+        ...sectionsBase,
+        { key: 'Knowledge Hub', label: 'Knowledge Hub' } // keep KH for non-admin at end of base list
+      ];
 
   return (
     <div className="dashboard">
