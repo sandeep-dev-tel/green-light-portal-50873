@@ -17,34 +17,47 @@ export default function SuppliersPage() {
   const PAGE_SIZE = 50;
 
   // PUBLIC_INTERFACE
-  // generateMockSuppliers: returns an array of 120 deterministic mock suppliers
+  // generateMockSuppliers: returns an array of ~1000 deterministic mock suppliers including Grade D
   const generateMockSuppliers = useMemo(() => {
-    /** Deterministically generate 120 suppliers with varied fields. */
+    /**
+     * Deterministically generate ~1000 suppliers with varied fields.
+     * Grade distribution cycles A, B, C, D to guarantee presence of D.
+     */
+    const TOTAL = 1000;
     const countries = ['USA', 'Germany', 'India', 'Brazil', 'Netherlands', 'Japan', 'China', 'France', 'UK', 'Canada', 'Spain', 'Italy', 'Mexico', 'Sweden', 'Norway'];
     const industries = ['AgriTech', 'Battery', 'Renewables', 'Automotive', 'Packaging', 'Healthcare', 'Robotics', 'Electronics', 'Pharma'];
     const sbtiStates = ['None', 'Committed', 'Approved'];
-    const grades = ['A', 'B', 'C'];
+    const grades = ['A', 'B', 'C', 'D'];
     const baseNames = ['Agrisoft', 'BareTech', 'BrightSolar', 'EcoFusion', 'PackRight', 'MediCore', 'RoboAxis', 'EcoPrint', 'GreenCore', 'SunVolt', 'AquaFlux', 'TerraPack', 'VoltEdge', 'NeuroBot', 'BioHealth'];
 
     const list = [];
-    for (let i = 1; i <= 120; i++) {
-      const name = `${baseNames[i % baseNames.length]} ${i.toString().padStart(3, '0')}`;
+    for (let i = 1; i <= TOTAL; i++) {
+      const name = `${baseNames[i % baseNames.length]} ${i.toString().padStart(4, '0')}`;
       const country = countries[i % countries.length];
       const industry = industries[i % industries.length];
-      const renewables = 8 + ((i * 7) % 85); // 8..92
+      const renewables = 5 + ((i * 11) % 92); // 5..96
       const sbti = sbtiStates[i % sbtiStates.length];
-      const products = 1 + (i % 8);
-      const grade = grades[i % grades.length];
+      const products = 1 + (i % 12);
+      const grade = grades[i % grades.length]; // includes D
       const month = String((i % 12) + 1).padStart(2, '0');
       const day = String(((i * 3) % 28) + 1).padStart(2, '0');
       const year = 2023 + ((i % 20) > 10 ? 1 : 0); // mostly 2023/2024
       const lastUpdated = `${year}-${month}-${day}`;
       list.push({ supplier: name, country, industry, renewables, sbti, products, grade, lastUpdated });
     }
-    return list;
+
+    // Ensure several explicitly named Grade D examples near the top for easy verification
+    const explicitD = [
+      { supplier: 'DeltaPack 0001D', country: 'USA', industry: 'Packaging', renewables: 9, sbti: 'None', products: 2, grade: 'D', lastUpdated: '2023-06-12' },
+      { supplier: 'LowCarbon Inc 0002D', country: 'India', industry: 'Automotive', renewables: 12, sbti: 'None', products: 1, grade: 'D', lastUpdated: '2024-01-24' },
+      { supplier: 'OldData Co 0003D', country: 'Germany', industry: 'Electronics', renewables: 7, sbti: 'Committed', products: 3, grade: 'D', lastUpdated: '2023-03-05' },
+      { supplier: 'NonReporting LLC 0004D', country: 'Brazil', industry: 'AgriTech', renewables: 6, sbti: 'None', products: 1, grade: 'D', lastUpdated: '2023-02-14' },
+    ];
+
+    return [...explicitD, ...list];
   }, []);
 
-  // Seed data (combine a few named examples then the mock list to exceed 100)
+  // Seed data (combine a few named examples then the mock list to exceed 1000)
   const data = useMemo(() => {
     const seed = [
       { supplier: 'Agrisoft', country: 'Brazil', industry: 'AgriTech', renewables: 45, sbti: 'None', products: 3, grade: 'B', lastUpdated: '2023-09-02' },
@@ -121,7 +134,8 @@ export default function SuppliersPage() {
     const a = set.filter((d) => d.grade === 'A').length;
     const b = set.filter((d) => d.grade === 'B').length;
     const c = set.filter((d) => d.grade === 'C').length;
-    return { onboarded, a, b, c };
+    const d = set.filter((x) => x.grade === 'D').length;
+    return { onboarded, a, b, c, d };
   }, [filteredSorted]);
 
   const setSortKey = (key) => {
@@ -157,6 +171,7 @@ export default function SuppliersPage() {
         <MetricCard title="Grade A" value={metrics.a} accent="var(--accent-green)" />
         <MetricCard title="Grade B" value={metrics.b} accent="var(--accent-amber)" />
         <MetricCard title="Grade C" value={metrics.c} accent="var(--accent-red)" />
+        <MetricCard title="Grade D" value={metrics.d} accent="var(--accent-red)" />
       </section>
 
       {/* Search and Filter */}
@@ -184,6 +199,7 @@ export default function SuppliersPage() {
             <option>Grade A</option>
             <option>Grade B</option>
             <option>Grade C</option>
+            <option>Grade D</option>
           </select>
         </div>
       </section>
@@ -301,8 +317,9 @@ function GradePill({ grade }) {
     A: { bg: 'var(--pill-A-bg)', color: 'var(--pill-A-text)' },
     B: { bg: 'var(--pill-B-bg)', color: 'var(--pill-B-text)' },
     C: { bg: 'var(--pill-C-bg)', color: 'var(--pill-C-text)' },
+    D: { bg: 'var(--pill-C-bg)', color: 'var(--pill-C-text)' }, // reuse C styling for D (red-themed)
   };
-  const { bg, color } = map[grade] || map.C;
+  const { bg, color } = map[grade] || map.D;
   return (
     <span className="sp-pill" style={{ background: bg, color }}>
       {grade}
@@ -347,7 +364,7 @@ function SuppliersStyles() {
     /* Metrics grid */
     .sp-cards {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(5, minmax(0, 1fr));
       gap: 16px;
     }
     .sp-card {
@@ -501,7 +518,10 @@ function SuppliersStyles() {
     .sp-page { color: var(--text-secondary); text-align: center; }
 
     /* Responsive */
-    @media (max-width: 1200px) {
+    @media (max-width: 1400px) {
+      .sp-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+    @media (max-width: 1000px) {
       .sp-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
     @media (max-width: 768px) {
