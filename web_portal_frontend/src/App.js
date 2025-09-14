@@ -5,6 +5,7 @@ import SuppliersPage from './SuppliersPage';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { gradeDistribution, complianceSplit, carbonByCategory, auditProgressSplit } from './supplierMetrics';
 import { mockSuppliers } from './data/mockSuppliers';
+import { mockAdminUser, isValidMockCredential } from './data/mockUsers';
 
 /**
  * App implements a simple state-based authentication with a light green theme.
@@ -12,9 +13,10 @@ import { mockSuppliers } from './data/mockSuppliers';
  * Upon success, a dashboard reflecting SustainHub features is displayed.
  */
 
-// Simple in-memory auth constants
-const VALID_USERNAME = 'admin';
-const VALID_PASSWORD = 'secret@111';
+/**
+ * Mock credentials are centralized in src/data/mockUsers.js
+ * Use mockAdminUser and isValidMockCredential for validation.
+ */
 
 // PUBLIC_INTERFACE
 export default function App() {
@@ -113,7 +115,7 @@ function AuthLayout({ children }) {
     <div className="auth-layout">
       <div className="brand-badge">SustainX Portal</div>
       {children}
-      <footer className="footer-note">Demo login: admin / secret@111</footer>
+      <footer className="footer-note">Demo login: {mockAdminUser.username} / {mockAdminUser.password}</footer>
     </div>
   );
 }
@@ -142,7 +144,7 @@ function LoginCard({ onSuccess }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (form.username === VALID_USERNAME && form.password === VALID_PASSWORD) {
+    if (isValidMockCredential(form.username, form.password)) {
       onSuccess(form.username);
     } else {
       setError('Invalid credentials. Please try again.');
