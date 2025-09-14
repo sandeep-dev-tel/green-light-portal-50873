@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import './App.css';
+import SuppliersPage from './SuppliersPage';
 
 /**
  * App implements a simple state-based authentication with a light green theme.
@@ -203,7 +204,11 @@ function SustainHubLayout({
     { key: 'Reports & Downloads', label: 'Reports & Downloads' },
   ];
   const sections = role === 'Admin'
-    ? [...sectionsBase, { key: 'Admin Settings', label: 'Admin Settings' }]
+    ? [
+        ...sectionsBase,
+        { key: 'Suppliers', label: 'Suppliers' },
+        { key: 'Admin Settings', label: 'Admin Settings' }
+      ]
     : sectionsBase;
 
   return (
@@ -314,6 +319,9 @@ function SectionContent({ section, role, user }) {
   }
   if (section === 'Reports & Downloads') {
     return <ReportsDownloads />;
+  }
+  if (section === 'Suppliers') {
+    return <SuppliersPage />;
   }
   if (section === 'Admin Settings') {
     return <AdminSettings />;

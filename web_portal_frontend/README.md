@@ -8,6 +8,7 @@ This project provides a minimal React template with a clean, modern UI and minim
 - **Modern UI**: Clean, responsive design with KAVIA brand styling
 - **Fast**: Minimal dependencies for quick loading times
 - **Simple**: Easy to understand and modify
+- **Suppliers Admin Page**: Admin role sees a "Suppliers" menu that opens a Suppliers listing page with metrics, filters, and a sortable table as per assets/suppliers_page_design_notes.md.
 
 ## Getting Started
 
