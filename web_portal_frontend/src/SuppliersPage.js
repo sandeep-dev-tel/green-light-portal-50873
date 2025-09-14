@@ -6,17 +6,47 @@ import React, { useMemo, useState } from 'react';
  * - Summary metric cards
  * - Search and grade filter
  * - Sortable, scrollable table with specified columns
+ * - Robust pagination (Prev/Next, page count, go-to page), 50 rows per page
  */
 export default function SuppliersPage() {
-  // theme vars and utility CSS classes are scoped here to avoid impacting global theme
   // Local state
   const [query, setQuery] = useState('');
   const [gradeFilter, setGradeFilter] = useState('All grades');
   const [sort, setSort] = useState({ key: 'supplier', dir: 'asc' });
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 50;
 
-  // Seed data (from design notes - representative examples)
-  const data = useMemo(
-    () => [
+  // PUBLIC_INTERFACE
+  // generateMockSuppliers: returns an array of 120 deterministic mock suppliers
+  const generateMockSuppliers = useMemo(() => {
+    /** Deterministically generate 120 suppliers with varied fields. */
+    const countries = ['USA', 'Germany', 'India', 'Brazil', 'Netherlands', 'Japan', 'China', 'France', 'UK', 'Canada', 'Spain', 'Italy', 'Mexico', 'Sweden', 'Norway'];
+    const industries = ['AgriTech', 'Battery', 'Renewables', 'Automotive', 'Packaging', 'Healthcare', 'Robotics', 'Electronics', 'Pharma'];
+    const sbtiStates = ['None', 'Committed', 'Approved'];
+    const grades = ['A', 'B', 'C'];
+    const baseNames = ['Agrisoft', 'BareTech', 'BrightSolar', 'EcoFusion', 'PackRight', 'MediCore', 'RoboAxis', 'EcoPrint', 'GreenCore', 'SunVolt', 'AquaFlux', 'TerraPack', 'VoltEdge', 'NeuroBot', 'BioHealth'];
+
+    const list = [];
+    for (let i = 1; i <= 120; i++) {
+      const name = `${baseNames[i % baseNames.length]} ${i.toString().padStart(3, '0')}`;
+      const country = countries[i % countries.length];
+      const industry = industries[i % industries.length];
+      const renewables = 8 + ((i * 7) % 85); // 8..92
+      const sbti = sbtiStates[i % sbtiStates.length];
+      const products = 1 + (i % 8);
+      const grade = grades[i % grades.length];
+      const month = String((i % 12) + 1).padStart(2, '0');
+      const day = String(((i * 3) % 28) + 1).padStart(2, '0');
+      const year = 2023 + ((i % 20) > 10 ? 1 : 0); // mostly 2023/2024
+      const lastUpdated = `${year}-${month}-${day}`;
+      list.push({ supplier: name, country, industry, renewables, sbti, products, grade, lastUpdated });
+    }
+    return list;
+  }, []);
+
+  // Seed data (combine a few named examples then the mock list to exceed 100)
+  const data = useMemo(() => {
+    const seed = [
       { supplier: 'Agrisoft', country: 'Brazil', industry: 'AgriTech', renewables: 45, sbti: 'None', products: 3, grade: 'B', lastUpdated: '2023-09-02' },
       { supplier: 'BareTech', country: 'India', industry: 'Battery', renewables: 52, sbti: 'Committed', products: 5, grade: 'A', lastUpdated: '2024-01-12' },
       { supplier: 'BrightSolar', country: 'USA', industry: 'Renewables', renewables: 70, sbti: 'Approved', products: 2, grade: 'A', lastUpdated: '2024-05-19' },
@@ -25,9 +55,9 @@ export default function SuppliersPage() {
       { supplier: 'MediCore', country: 'Japan', industry: 'Healthcare', renewables: 15, sbti: 'None', products: 3, grade: 'C', lastUpdated: '2023-08-09' },
       { supplier: 'RoboAxis', country: 'China', industry: 'Robotics', renewables: 10, sbti: 'None', products: 6, grade: 'C', lastUpdated: '2023-07-21' },
       { supplier: 'EcoPrint', country: 'France', industry: 'Packaging', renewables: 30, sbti: 'Committed', products: 2, grade: 'B', lastUpdated: '2023-12-05' },
-    ],
-    []
-  );
+    ];
+    return [...seed, ...generateMockSuppliers];
+  }, [generateMockSuppliers]);
 
   const columns = [
     { key: 'supplier', label: 'Supplier', sortable: true, width: '18%' },
@@ -40,7 +70,8 @@ export default function SuppliersPage() {
     { key: 'lastUpdated', label: 'Last Updated', sortable: true, width: '12%' },
   ];
 
-  const filtered = useMemo(() => {
+  // Apply filter + sort
+  const filteredSorted = useMemo(() => {
     const q = query.trim().toLowerCase();
     let rows = data.filter((r) => {
       const hay = `${r.supplier} ${r.country} ${r.industry}`.toLowerCase();
@@ -55,12 +86,10 @@ export default function SuppliersPage() {
     rows.sort((a, b) => {
       let av = a[key];
       let bv = b[key];
-      // normalize numbers
       if (key === 'renewables' || key === 'products') {
         av = Number(av);
         bv = Number(bv);
       }
-      // dates
       if (key === 'lastUpdated') {
         av = new Date(av).getTime();
         bv = new Date(bv).getTime();
@@ -73,13 +102,27 @@ export default function SuppliersPage() {
     return rows;
   }, [data, query, gradeFilter, sort]);
 
+  // Reset to first page when filters or sorting change
+  React.useEffect(() => {
+    setPage(1);
+  }, [query, gradeFilter, sort]);
+
+  // Pagination calculations
+  const totalPages = Math.max(1, Math.ceil(filteredSorted.length / PAGE_SIZE));
+  const pageSafe = Math.min(Math.max(1, page), totalPages);
+  const startIdx = (pageSafe - 1) * PAGE_SIZE;
+  const endIdx = startIdx + PAGE_SIZE;
+  const pagedRows = filteredSorted.slice(startIdx, endIdx);
+
   const metrics = useMemo(() => {
-    const onboarded = data.length;
-    const a = data.filter((d) => d.grade === 'A').length;
-    const b = data.filter((d) => d.grade === 'B').length;
-    const c = data.filter((d) => d.grade === 'C').length;
+    // Show metrics for the filtered set to make controls feel responsive
+    const set = filteredSorted;
+    const onboarded = set.length;
+    const a = set.filter((d) => d.grade === 'A').length;
+    const b = set.filter((d) => d.grade === 'B').length;
+    const c = set.filter((d) => d.grade === 'C').length;
     return { onboarded, a, b, c };
-  }, [data]);
+  }, [filteredSorted]);
 
   const setSortKey = (key) => {
     setSort((prev) => {
@@ -88,6 +131,20 @@ export default function SuppliersPage() {
       }
       return { key, dir: 'asc' };
     });
+  };
+
+  const canPrev = pageSafe > 1;
+  const canNext = pageSafe < totalPages;
+
+  // Go-to page input controlled locally to avoid jitter while typing
+  const [gotoInput, setGotoInput] = useState('');
+  const handleGoto = (e) => {
+    e.preventDefault();
+    const n = parseInt(gotoInput, 10);
+    if (!Number.isNaN(n)) {
+      const target = Math.min(Math.max(1, n), totalPages);
+      setPage(target);
+    }
   };
 
   return (
@@ -163,8 +220,8 @@ export default function SuppliersPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((row) => (
-                <tr key={`${row.supplier}-${row.country}`}>
+              {pagedRows.map((row) => (
+                <tr key={`${row.supplier}-${row.country}-${row.lastUpdated}`}>
                   <td>{row.supplier}</td>
                   <td>{row.country}</td>
                   <td>{row.industry}</td>
@@ -177,7 +234,7 @@ export default function SuppliersPage() {
                   <td>{row.lastUpdated}</td>
                 </tr>
               ))}
-              {filtered.length === 0 && (
+              {pagedRows.length === 0 && (
                 <tr>
                   <td colSpan={columns.length} style={{ color: 'var(--text-secondary)' }}>
                     No suppliers match your criteria.
@@ -187,11 +244,42 @@ export default function SuppliersPage() {
             </tbody>
           </table>
         </div>
-        {/* Simple pagination placeholder for long lists */}
+        {/* Pagination controls */}
         <div className="sp-pagination" aria-label="Pagination">
-          <button className="sp-btn ghost" disabled>Prev</button>
-          <div className="sp-page">Page 1 of 1</div>
-          <button className="sp-btn ghost" disabled>Next</button>
+          <button
+            className="sp-btn ghost"
+            onClick={() => canPrev && setPage((p) => Math.max(1, p - 1))}
+            disabled={!canPrev}
+            aria-label="Previous page"
+          >
+            Prev
+          </button>
+          <div className="sp-page" aria-live="polite">
+            Page {pageSafe} of {totalPages}
+          </div>
+          <form onSubmit={handleGoto} style={{ display: 'flex', gap: 8, alignItems: 'center' }} aria-label="Go to page">
+            <label className="sp-label" htmlFor="gotoPage">Go to</label>
+            <input
+              id="gotoPage"
+              className="sp-input sp-input-inline"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              placeholder={`${pageSafe}`}
+              value={gotoInput}
+              onChange={(e) => setGotoInput(e.target.value)}
+              style={{ width: 64, border: '1px solid var(--border-subtle)', borderRadius: 8, padding: '6px 8px' }}
+              aria-label="Go to page number"
+            />
+            <button type="submit" className="sp-btn ghost">Go</button>
+          </form>
+          <button
+            className="sp-btn ghost"
+            onClick={() => canNext && setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={!canNext}
+            aria-label="Next page"
+          >
+            Next
+          </button>
         </div>
       </section>
     </div>
@@ -313,10 +401,14 @@ function SuppliersStyles() {
       font-size: 1em;
       color: var(--text-primary);
     }
+    .sp-input-inline {
+      background: #fff;
+    }
     .sp-filter-row {
       display: flex;
       gap: 8px;
       align-items: center;
+      flex-wrap: wrap;
     }
     .sp-label {
       color: var(--text-secondary);
@@ -338,6 +430,7 @@ function SuppliersStyles() {
     .sp-table-scroll {
       overflow: auto;
       border-radius: 12px 12px 0 0;
+      max-height: 480px;
     }
     .sp-table {
       width: 100%;
@@ -386,9 +479,10 @@ function SuppliersStyles() {
     }
 
     .sp-pagination {
-      display: flex;
+      display: grid;
+      grid-template-columns: auto 1fr auto auto;
       align-items: center;
-      justify-content: space-between;
+      gap: 8px;
       padding: 10px 12px 12px;
       border-top: 1px solid var(--border-subtle);
       border-radius: 0 0 12px 12px;
@@ -400,7 +494,11 @@ function SuppliersStyles() {
       padding: 8px 12px;
       color: var(--text-secondary);
     }
-    .sp-page { color: var(--text-secondary); }
+    .sp-btn.ghost:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .sp-page { color: var(--text-secondary); text-align: center; }
 
     /* Responsive */
     @media (max-width: 1200px) {
@@ -408,6 +506,7 @@ function SuppliersStyles() {
     }
     @media (max-width: 768px) {
       .sp-cards { grid-template-columns: 1fr; }
+      .sp-pagination { grid-template-columns: auto 1fr auto; }
     }
     `}</style>
   );
