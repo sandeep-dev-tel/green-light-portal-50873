@@ -18,15 +18,17 @@ export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState('');
   // Role and language are for dashboard only (placeholders)
-  const [role, setRole] = useState('Supplier'); // 'Supplier' | 'Admin'
+  // Default to 'Admin' to ensure Admin menu (including 'Suppliers') is visible by default after login.
+  const [role, setRole] = useState('Admin'); // 'Supplier' | 'Admin'
   const [lang, setLang] = useState('EN'); // EN/DE/ES
 
   // Active section in dashboard (left sidebar)
   const [section, setSection] = useState('Dashboard');
 
-  // Persist auth across reloads (optional and safe for demo only)
+  // Persist auth and UI preferences across reloads (demo-safe)
   useEffect(() => {
     const stored = sessionStorage.getItem('glp_auth');
+    const storedPrefs = sessionStorage.getItem('glp_prefs');
     if (stored) {
       try {
         const parsed = JSON.parse(stored);
@@ -38,19 +40,36 @@ export default function App() {
         // ignore parse errors
       }
     }
+    if (storedPrefs) {
+      try {
+        const prefs = JSON.parse(storedPrefs);
+        if (prefs?.role) setRole(prefs.role);
+        if (prefs?.lang) setLang(prefs.lang);
+        if (prefs?.section) setSection(prefs.section);
+      } catch {
+        // ignore parse errors
+      }
+    }
   }, []);
 
   useEffect(() => {
     sessionStorage.setItem('glp_auth', JSON.stringify({ isAuthenticated, user }));
   }, [isAuthenticated, user]);
 
+  // Persist role/lang/section so the selected role survives reloads within the session
+  useEffect(() => {
+    sessionStorage.setItem('glp_prefs', JSON.stringify({ role, lang, section }));
+  }, [role, lang, section]);
+
   const handleLogout = () => {
     setIsAuthenticated(false);
     setUser('');
-    setRole('Supplier');
+    // Reset to Admin so that upon next login, default context is Admin again
+    setRole('Admin');
     setLang('EN');
     setSection('Dashboard');
     sessionStorage.removeItem('glp_auth');
+    sessionStorage.removeItem('glp_prefs');
   };
 
   return (
