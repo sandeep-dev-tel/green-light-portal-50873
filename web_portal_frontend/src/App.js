@@ -222,22 +222,31 @@ function SustainHubLayout({
     { key: 'Reports & Downloads', label: 'Reports & Downloads' },
   ];
 
-  // For Admin role, place "Suppliers" as the 2nd item and "Knowledge Hub" as the last item
-  const sections = role === 'Admin'
+  // For Admin role, construct sections and enforce "My Profile" as last item.
+  const rawSections = role === 'Admin'
     ? [
         { key: 'Dashboard', label: 'Dashboard' },
-        { key: 'Suppliers', label: 'Suppliers' },           // moved to 2nd position
+        { key: 'Suppliers', label: 'Suppliers' }, // ensure Suppliers is prominent
         { key: 'My Profile', label: 'My Profile' },
         { key: 'Data Submission', label: 'Data Submission' },
         { key: 'Compliance Scores', label: 'Compliance Scores' },
         { key: 'Reports & Downloads', label: 'Reports & Downloads' },
-        { key: 'Knowledge Hub', label: 'Knowledge Hub' },   // moved to last position
+        { key: 'Knowledge Hub', label: 'Knowledge Hub' },
         { key: 'Admin Settings', label: 'Admin Settings' }
       ]
     : [
         ...sectionsBase,
-        { key: 'Knowledge Hub', label: 'Knowledge Hub' } // keep KH for non-admin at end of base list
+        { key: 'Knowledge Hub', label: 'Knowledge Hub' }
       ];
+
+  // Ensure "My Profile" (by key) is always appended as the last item after every render.
+  // This is resilient to any array order changes or persisted state after reloads.
+  const sections = React.useMemo(() => {
+    const PROFILE_KEYS = new Set(['My Profile']); // if renamed, ensure the key stays consistent
+    const withoutProfile = rawSections.filter(s => !PROFILE_KEYS.has(s.key));
+    const profileItems = rawSections.filter(s => PROFILE_KEYS.has(s.key));
+    return [...withoutProfile, ...profileItems];
+  }, [rawSections]);
 
   return (
     <div className="dashboard">
