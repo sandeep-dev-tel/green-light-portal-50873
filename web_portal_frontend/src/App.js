@@ -259,7 +259,7 @@ function SustainHubLayout({
   return (
     <div className="dashboard">
       <header className="topbar">
-        <div className="brand">Elxsi SustainHub</div>
+        <div className="brand">TataElxsi-SustainHub</div>
         <div
           /* Reduce font sizing for topbar controls by 20% (login page unaffected) */
           style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: '0.8em' }}
