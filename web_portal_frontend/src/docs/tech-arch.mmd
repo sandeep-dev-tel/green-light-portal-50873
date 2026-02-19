@@ -1,69 +1,78 @@
 ---
-title: "TriAgI: Tiered Triage, Closure & Feedback Lifecycle"
+config:
+  maxTextSize: 1000000
 ---
-
 graph TD
-  %% Tier 1: Intake & Triage
+  %% Tier 1: Intake
   subgraph Tier1["Layer 1: Automated Triage"]
     A["User Input: Logs, Video, Code"] --> B["Gateway & AuthZ"]
     B --> C["L1 Triage Agent"]
     C --> D{"Resolved at L1?"}
-
-    D -- "Yes" --> CL1["Close Ticket @ L1"]
   end
 
-  %% Orchestration Layer
-  subgraph Orchestration["Orchestration Layer"]
-    D -- "No (Escalate)" --> E["Task Planner & Router"]
-    E --> F["DAG Engine: Parallel Execution"]
+  %% Jira as System of Record
+  subgraph JiraSystem["Jira Ticketing System"]
+    direction TB
+    JS["Jira API Gateway"]
+    S1["Status: Triage (L1)"]
+    S2["Status: Investigating (L2)"]
+    S3["Status: Expert Review (L3)"]
+    S4["Status: Resolved / Closed"]
+    
+    JS --> S1
   end
 
-  %% Tier 2: Investigation Swarm
+  %% Shared Services (The Memory Layer)
+  subgraph SharedServices["Shared Data & Memory Layer"]
+    MEM["Short-Term Task Context"]
+    RAG_DB[("Vector DB: Enterprise Knowledge")]
+    Jira_Hist[("Jira History & Git Logs")]
+  end
+
+  %% Tier 2 Swarm
   subgraph Tier2["Layer 2: Specialized Swarm"]
-    F --> G1["Log Detective"]
-    F --> G2["Visual Analysis"]
-    F --> G3["Code Surgeon"]
-    F --> G4["RAG Knowledge Base"]
-
-    G1 & G2 & G3 & G4 --> H["Result Aggregator"]
-    H --> I{"Fix Found at L2?"}
-
-    I -- "Yes" --> CL2["Close Ticket @ L2"]
+    direction LR
+    G1["Log Detective"]
+    G2["Visual Analysis"]
+    G3["Code Surgeon"]
+    
+    G1 & G2 & G3 --> Agg["Result Aggregator"]
   end
 
-  %% Tier 3: Expert Resolution
-  subgraph Tier3["Layer 3: Expert RCA"]
-    I -- "No (Deep Analysis)" --> J["L3 Expert RCA Agent"]
-    J --> K["Policy Engine & HITL Gate"]
+  %% ESCALATIONS & STATUS UPDATES
+  D -- "Yes" --> J_Close1["API: Resolve Ticket"] --> S4
+  D -- "No" --> J_Esc1["API: Update Status to L2"] --> S2
+  
+  S2 --> Planner["Task Planner & Router"]
+  Planner --> DAG["DAG Engine"]
+  
+  DAG -- "Parallel Fan-out" --> G1
+  DAG -- "Parallel Fan-out" --> G2
+  DAG -- "Parallel Fan-out" --> G3
+  
+  %% Memory access
+  G1 & G2 & G3 -.-> MEM
+  G1 & G2 & G3 -.-> RAG_DB
+  
+  %% L2 to L3 Transition
+  Agg --> L2D{"Root Cause?"}
+  L2D -- "Yes" --> J_Close2["API: Resolve Ticket"]
+  L2D -- "No" --> J_Esc2["API: Update Status to L3"] --> S3
+  
+  S3 --> L3["L3 Expert RCA Agent"]
+  L3 --> Policy["Policy Engine & HITL Gate"]
+  Policy -- "Approved" --> J_Close3["API: Resolve Ticket"]
 
-    K -- "Approved" --> CL3["Close Ticket @ L3"]
-  end
-
-  %% Output & Feedback Flow
-  subgraph FeedbackFlow["Resolution & Feedback Hub"]
-    Resp["Responder Agent"]
-    Rep["Final Report & Fix"]
-    FB["User Feedback: 👍/👎"]
-    KB["Update RAG & Jira/Confluence"]
-  end
-
-  %% Connecting Closures to Responder
-  CL1 & CL2 & CL3 --> Resp
-
-  %% The Cyclic Feedback Loop
-  Resp --> Rep
-  Rep --> FB
-  FB -- "Helpful (Success Data)" --> KB
-
-  %% Feeding back to the system for future usage
-  KB -.-> C
-  KB -.-> G4
+  %% FEEDBACK HUB
+  S4 --> Resp["Responder Agent"]
+  Resp --> Rep["Final Report & Fix"]
+  Rep --> FB["User Feedback: 👍/👎"]
+  FB -- "Helpful" --> KB["KB Update & Sync"]
+  KB -.-> RAG_DB
+  KB -.-> Jira_Hist
 
   %% Styling
-  style Tier1 fill:#f0fdf4,stroke:#166534
-  style Tier2 fill:#fffbeb,stroke:#92400e
-  style Tier3 fill:#fef2f2,stroke:#991b1b
-  style FeedbackFlow fill:#f0f9ff,stroke:#075985,stroke-dasharray: 5 5
-  style CL1 fill:#4ade80,font-weight:bold
-  style CL2 fill:#fbbf24,font-weight:bold
-  style CL3 fill:#f87171,font-weight:bold
+  style JiraSystem fill:#e0e7ff,stroke:#3730a3
+  style SharedServices fill:#f5f5f5,stroke:#737373
+  style S4 fill:#4ade80,font-weight:bold
+  style Policy fill:#fca5a5,stroke:#b91c1c
