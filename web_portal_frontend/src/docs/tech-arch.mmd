@@ -1,0 +1,69 @@
+---
+title: "TriAgI: Tiered Triage, Closure & Feedback Lifecycle"
+---
+
+graph TD
+  %% Tier 1: Intake & Triage
+  subgraph Tier1["Layer 1: Automated Triage"]
+    A["User Input: Logs, Video, Code"] --> B["Gateway & AuthZ"]
+    B --> C["L1 Triage Agent"]
+    C --> D{"Resolved at L1?"}
+
+    D -- "Yes" --> CL1["Close Ticket @ L1"]
+  end
+
+  %% Orchestration Layer
+  subgraph Orchestration["Orchestration Layer"]
+    D -- "No (Escalate)" --> E["Task Planner & Router"]
+    E --> F["DAG Engine: Parallel Execution"]
+  end
+
+  %% Tier 2: Investigation Swarm
+  subgraph Tier2["Layer 2: Specialized Swarm"]
+    F --> G1["Log Detective"]
+    F --> G2["Visual Analysis"]
+    F --> G3["Code Surgeon"]
+    F --> G4["RAG Knowledge Base"]
+
+    G1 & G2 & G3 & G4 --> H["Result Aggregator"]
+    H --> I{"Fix Found at L2?"}
+
+    I -- "Yes" --> CL2["Close Ticket @ L2"]
+  end
+
+  %% Tier 3: Expert Resolution
+  subgraph Tier3["Layer 3: Expert RCA"]
+    I -- "No (Deep Analysis)" --> J["L3 Expert RCA Agent"]
+    J --> K["Policy Engine & HITL Gate"]
+
+    K -- "Approved" --> CL3["Close Ticket @ L3"]
+  end
+
+  %% Output & Feedback Flow
+  subgraph FeedbackFlow["Resolution & Feedback Hub"]
+    Resp["Responder Agent"]
+    Rep["Final Report & Fix"]
+    FB["User Feedback: 👍/👎"]
+    KB["Update RAG & Jira/Confluence"]
+  end
+
+  %% Connecting Closures to Responder
+  CL1 & CL2 & CL3 --> Resp
+
+  %% The Cyclic Feedback Loop
+  Resp --> Rep
+  Rep --> FB
+  FB -- "Helpful (Success Data)" --> KB
+
+  %% Feeding back to the system for future usage
+  KB -.-> C
+  KB -.-> G4
+
+  %% Styling
+  style Tier1 fill:#f0fdf4,stroke:#166534
+  style Tier2 fill:#fffbeb,stroke:#92400e
+  style Tier3 fill:#fef2f2,stroke:#991b1b
+  style FeedbackFlow fill:#f0f9ff,stroke:#075985,stroke-dasharray: 5 5
+  style CL1 fill:#4ade80,font-weight:bold
+  style CL2 fill:#fbbf24,font-weight:bold
+  style CL3 fill:#f87171,font-weight:bold

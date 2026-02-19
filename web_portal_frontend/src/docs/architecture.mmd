@@ -1,0 +1,46 @@
+graph TD
+    %% Input Layer
+    subgraph Input ["User Intake"]
+        A[User Input: Logs, Video, Code, Query] --> B[Gateway + AuthZ]
+    end
+
+    %% Tier 1
+    subgraph L1 ["Tier 1: Automated Triage"]
+        B --> C[L1 Triage Agent]
+        C -- "Intent Detection & FAQ" --> D{Resolved?}
+    end
+
+    %% Orchestration
+    subgraph Core ["Orchestration Layer"]
+        D -- "No (Escalate)" --> E[Task Planner / Router]
+        E -- "Synthesize DAG" --> F[DAG Engine]
+    end
+
+    %% Tier 2 Swarm
+    subgraph L2 ["Tier 2: Specialized Investigation Swarm"]
+        F -- "Parallel Fan-out" --> G[Log Detective]
+        F -- "Parallel Fan-out" --> H[Visual Analysis Agent]
+        F -- "Parallel Fan-out" --> I[Code Surgeon]
+        F -- "Parallel Fan-out" --> J[RAG Knowledge Base]
+        
+        G --> K[Result Aggregator]
+        H --> K
+        I --> K
+        J --> K
+    end
+
+    %% Tier 3 & Governance
+    subgraph L3 ["Tier 3: Expert Resolution & Guardrails"]
+        K -- "Correlated Data" --> L[L3 Expert RCA Agent]
+        L --> M[Policy Engine / HITL Gate]
+    end
+
+    %% Output
+    M -- "Approved" --> N[Responder Agent]
+    N -- "Final Report & Fix" --> O[User / DevOps Team]
+
+    %% Styling
+    style E fill:#f96,stroke:#333,stroke-width:2px
+    style L1 fill:#dfd,stroke:#333
+    style L2 fill:#fff4dd,stroke:#333
+    style L3 fill:#ffdada,stroke:#333
